@@ -1,4 +1,5 @@
 import 'package:ar_object_placer/objects.dart';
+import 'package:ar_object_placer/retrive_object_screen.dart';
 import 'package:flutter/material.dart';
 import 'ar_object_placer_screen.dart';
 
@@ -27,6 +28,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
               child: Text("Place Object"),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const RetrieveObjectsScreen()),
+                );
+              },
+              child: const Text("Retrieve Objects"),
             ),
           ],
         ),

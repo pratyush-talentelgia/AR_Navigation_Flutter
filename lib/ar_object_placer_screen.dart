@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:ar_object_placer/objects.dart';
+import 'package:ar_object_placer/utils/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:ar_flutter_plugin_2/managers/ar_location_manager.dart';
 import 'package:ar_flutter_plugin_2/managers/ar_session_manager.dart';
@@ -230,7 +231,7 @@ class _ARObjectPlacerScreenState extends State<ARObjectPlacerScreen> {
         'longitude': long,
         'timestamp': DateTime.now().toIso8601String(),
       };
-      print('📤 Sending data to $url: $payload');
+      print('Sending data to $url: $payload');
 
       final response = await http.post(
         url,
@@ -255,6 +256,7 @@ class _ARObjectPlacerScreenState extends State<ARObjectPlacerScreen> {
 
   Future<void> onPlaneOrPointTapped(List<ARHitTestResult> hitTestResults) async {
     print('onPlaneOrPointTapped clicked');
+
     var singleHitTestResult = hitTestResults.firstWhere(
           (hitTestResult) => hitTestResult.type == ARHitTestResultType.plane,
     );
@@ -263,6 +265,7 @@ class _ARObjectPlacerScreenState extends State<ARObjectPlacerScreen> {
       desiredAccuracy: LocationAccuracy.bestForNavigation,
     );
 
+    // Create anchor from hit test result
     var newAnchor = ARPlaneAnchor(
       transformation: singleHitTestResult.worldTransform,
     );
@@ -271,10 +274,13 @@ class _ARObjectPlacerScreenState extends State<ARObjectPlacerScreen> {
     if (didAddAnchor!) {
       anchors.add(newAnchor);
 
+      // Our model file
+      String modelUrl = "https://github.com/pratyush-talentelgia/street-view-host/raw/refs/heads/main/direction_arrow.glb";
+
+      // Create the AR object
       var newNode = ARNode(
         type: NodeType.webGLB,
-        uri:
-        "https://github.com/pratyush-talentelgia/street-view-host/raw/refs/heads/main/direction_arrow.glb",
+        uri: modelUrl,
         scale: Vector3(8.0, 8.0, 8.0),
         position: Vector3(0.0, 0.0, 0.0),
         rotation: Vector4(1.0, 0.0, 0.0, 0.0),
@@ -293,14 +299,60 @@ class _ARObjectPlacerScreenState extends State<ARObjectPlacerScreen> {
           longitude: position.longitude,
         ));
         setState(() {});
+
+        // Prepare JSON payload for db.json
+        final locationId = locationIdCounter++;
+        final payload = {
+          'id': locationId,
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+          'timestamp': DateTime.now().toIso8601String(),
+          'modelUrl': modelUrl,
+          'scale': {
+            'x': newNode.scale!.x,
+            'y': newNode.scale!.y,
+            'z': newNode.scale!.z
+          },
+          'position': {
+            'x': newNode.position!.x,
+            'y': newNode.position!.y,
+            'z': newNode.position!.z
+          },
+          'rotation': (newNode.rotation is Vector4)
+              ? (newNode.rotation as Vector4).toQuaternionMap()
+              : (newNode.rotation).toQuaternionMap(),
+          'anchorTransform': singleHitTestResult.worldTransform.toNestedList()
+        };
+
+        await sendObjectDataToServer(payload);
+
       } else {
         _showErrorDialog("Adding Node to Anchor failed");
       }
     } else {
       _showErrorDialog("Adding Anchor failed");
     }
+  }
 
-    await sendLocationToServer(position.latitude, position.longitude);
+  Future<void> sendObjectDataToServer(Map<String, dynamic> payload) async {
+    try {
+      final url = Uri.parse('http://192.168.0.81:3000/locations');
+      print('Sending data to $url: $payload');
+
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
+      );
+
+      if (response.statusCode == 201) {
+        print('Object data saved successfully');
+      } else {
+        print('Failed to save object data: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Exception in sendObjectDataToServer: $e');
+    }
   }
 
 
