@@ -1,7 +1,7 @@
-import 'package:ar_object_placer/objects.dart';
-import 'package:ar_object_placer/retrive_object_screen.dart';
+import 'package:ar_object_placer/model.dart';
 import 'package:flutter/material.dart';
 import 'ar_object_placer_screen.dart';
+import 'ar_object_view_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -35,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (_) => const RetrieveObjectsScreen()),
+                      builder: (_) => ArObjectViewScreen()),
                 );
               },
               child: const Text("Retrieve Objects"),

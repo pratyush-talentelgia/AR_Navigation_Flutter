@@ -304,14 +304,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.8"
-  sceneview_flutter:
-    dependency: "direct main"
-    description:
-      name: sceneview_flutter
-      sha256: "34d8a6ed1c5d3bfc99b3e14ec18e82b07b1582a84d9f1e1b6a654ac1a486c9d1"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.1"
   sky_engine:
     dependency: transitive
     description: flutter

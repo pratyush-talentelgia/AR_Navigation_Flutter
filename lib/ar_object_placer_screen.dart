@@ -1,6 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 
-import 'package:ar_object_placer/objects.dart';
+import 'package:ar_object_placer/model.dart';
 import 'package:ar_object_placer/utils/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:ar_flutter_plugin_2/managers/ar_location_manager.dart';
@@ -41,7 +42,7 @@ class _ARObjectPlacerScreenState extends State<ARObjectPlacerScreen> {
   List<ARAnchor> anchors = [];
   List<PlacedObject> placedObjects = [];
   int locationIdCounter = 1;
-
+  StreamSubscription<Position>? _positionStreamSubscription;
   double? latitude;
   double? longitude;
 
@@ -72,12 +73,13 @@ class _ARObjectPlacerScreenState extends State<ARObjectPlacerScreen> {
     _startLocationStream();
   }
   void _startLocationStream() {
-    Geolocator.getPositionStream(
+    _positionStreamSubscription = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.bestForNavigation,
         distanceFilter: 0,
       ),
     ).listen((Position position) {
+      if (!mounted) return;
       setState(() {
         latitude = position.latitude;
         longitude = position.longitude;
@@ -86,8 +88,9 @@ class _ARObjectPlacerScreenState extends State<ARObjectPlacerScreen> {
   }
   @override
   void dispose() {
+    _positionStreamSubscription?.cancel();
+    arSessionManager?.dispose();
     super.dispose();
-    arSessionManager!.dispose();
   }
 
   @override
@@ -179,7 +182,7 @@ class _ARObjectPlacerScreenState extends State<ARObjectPlacerScreen> {
         customPlaneTexturePath: "Images/triangle.png",
         showWorldOrigin: true,
         showAnimatedGuide: true,
-        handleRotation: true
+        handleRotation: true,
     );
     this.arObjectManager!.onInitialize();
 

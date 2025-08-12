@@ -1,8 +1,6 @@
 import 'package:ar_object_placer/home_screen.dart';
 import 'package:flutter/material.dart';
 
-import 'ar_object_placer_screen.dart';
-
 void main(){
   runApp(const MyApp());
 }
